@@ -25,4 +25,9 @@ module.exports = {
   IS_PRODUCTION: process.env.NODE_ENV === 'production',
   DB_PATH: resolveDbPath(),
   PUBLIC_DIR: path.join(ROOT_DIR, 'public'),
+  // Mã PIN mở Dashboard Giáo viên – BẮT BUỘC khai báo trong tab Variables của Railway.
+  // Không khai báo → Dashboard Giáo viên bị khóa (để không lộ dữ liệu học sinh).
+  TEACHER_PIN: (process.env.TEACHER_PIN || '').trim(),
+  // Múi giờ dùng để tính "hôm nay", "7 ngày qua" (máy chủ Railway chạy giờ UTC)
+  TIME_ZONE: process.env.APP_TIMEZONE || 'Asia/Ho_Chi_Minh',
 };

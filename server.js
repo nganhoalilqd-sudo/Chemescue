@@ -13,6 +13,9 @@ const { initDatabase, getDb, closeDatabase } = require('./server/db/database');
 const elementsRouter = require('./server/routes/elements');
 const questionsRouter = require('./server/routes/questions');
 const scoresRouter = require('./server/routes/scores');
+const authRouter = require('./server/routes/auth');
+const meRouter = require('./server/routes/me');
+const teacherRouter = require('./server/routes/teacher');
 const { apiNotFound, errorHandler } = require('./server/middlewares/errorHandler');
 
 // ---------- 1. Cơ sở dữ liệu ----------
@@ -22,7 +25,10 @@ initDatabase(config.DB_PATH);
 // ---------- 2. Ứng dụng Express ----------
 const app = express();
 app.disable('x-powered-by');
-app.use(express.json({ limit: '10kb' })); // Đọc dữ liệu JSON gửi lên (giới hạn 10KB)
+app.set('trust proxy', 1); // Railway đứng sau proxy → lấy đúng địa chỉ IP người dùng
+// Tiến độ học của học sinh có thể lớn hơn → cho phép tới 1MB riêng cho /api/me
+app.use('/api/me', express.json({ limit: '1mb' }));
+app.use(express.json({ limit: '10kb' })); // Các API khác: tối đa 10KB
 
 // Kiểm tra "sức khỏe" – Railway gọi để biết server còn sống
 app.get('/api/health', (req, res) => {
@@ -33,17 +39,26 @@ app.get('/api/health', (req, res) => {
 app.use('/api/elements', elementsRouter);
 app.use('/api/questions', questionsRouter);
 app.use('/api/scores', scoresRouter);
+app.use('/api/auth', authRouter);       // Đăng nhập học sinh / giáo viên
+app.use('/api/me', meRouter);           // Tiến độ của học sinh đang đăng nhập
+app.use('/api/teacher', teacherRouter); // Dữ liệu cho Dashboard Giáo viên
 app.use('/api', apiNotFound); // /api/... không tồn tại → 404 dạng JSON
 
 // ---------- 3. Giao diện (Frontend) ----------
-app.use(express.static(config.PUBLIC_DIR, { maxAge: config.IS_PRODUCTION ? '1h' : 0 }));
-app.get('*', (req, res) => res.sendFile('index.html', { root: config.PUBLIC_DIR }));
+// maxAge 0: trình duyệt luôn hỏi lại máy chủ → học sinh nhận bản mới ngay sau khi cập nhật
+app.use(express.static(config.PUBLIC_DIR, { maxAge: 0 }));
+// Đường dẫn trang (không có đuôi file) → trả về trang chính; file không tồn tại (vd .js) → 404
+app.get('*', (req, res, next) => {
+  if (/\.[a-z0-9]+$/i.test(req.path)) return res.status(404).send('Không tìm thấy file');
+  res.sendFile('index.html', { root: config.PUBLIC_DIR });
+});
 
 app.use(errorHandler);
 
 // ---------- 4. Khởi chạy ----------
 const server = app.listen(config.PORT, config.HOST, () => {
   console.log(`🚀 ChemRescue đang chạy tại http://localhost:${config.PORT}`);
+  if (!config.TEACHER_PIN) console.warn('⚠️  Chưa đặt TEACHER_PIN → Dashboard Giáo viên đang bị khóa.');
 });
 
 // Tắt server an toàn khi Railway dừng/deploy lại (đóng CSDL để không hỏng file .db)

@@ -1,155 +1,138 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ChemRescue – Giải cứu căn bản Hóa học</title>
-  <meta name="description" content="ChemRescue – học Hóa học THCS qua trò chơi: hóa trị, nguyên tố, lập công thức." />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚗️</text></svg>" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700;800&display=swap" />
-  <link rel="stylesheet" href="/css/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#5b5bf7">
+  <meta name="description" content="ChemRescue – Nền tảng game hóa giúp học sinh THCS lấy lại căn bản Hóa học (KHTN 7–9).">
+  <title>ChemRescue — Giải cứu môn Hóa</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/modules/diagnostic.css">
+  <link rel="stylesheet" href="css/modules/island.css">
+  <link rel="stylesheet" href="css/modules/arena.css">
+  <link rel="stylesheet" href="css/modules/skills.css">
+  <link rel="stylesheet" href="css/modules/teacher.css">
 </head>
-<body>
-  <!-- ========== THANH TRÊN CÙNG ========== -->
-  <header class="topbar">
-    <a class="brand" href="#top">⚗️ <span>Chem<b>Rescue</b></span></a>
-    <nav class="topnav">
-      <a href="#missions">Nhiệm vụ</a>
-      <a href="#elements">Kho nguyên tố</a>
-      <a href="#leaderboard">Bảng vàng</a>
-    </nav>
-    <!-- Thẻ người chơi: tên, cấp độ, thanh kinh nghiệm (XP) -->
-    <div class="player-chip" id="playerChip">
-      <span class="avatar">🧑‍🔬</span>
-      <div class="player-info">
-        <strong id="playerName">Nhà hóa học nhí</strong>
-        <div class="xp-row">
-          <span class="level" id="playerLevel">Lv 1</span>
-          <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
-        </div>
+<body class="is-booting">
+  <a class="skip-link" href="#main">Bỏ qua tới nội dung chính</a>
+
+  <!-- ============ ĐANG TẢI ============ -->
+  <div class="boot" id="boot" role="status">⚗️ Đang tải ChemRescue…</div>
+
+  <!-- ============ MÀN HÌNH ĐĂNG NHẬP ============ -->
+  <div class="gate" id="gate" hidden>
+    <div class="gate__card">
+      <div class="gate__brand"><span aria-hidden="true">⚗️</span> Chem<b>Rescue</b></div>
+      <p class="gate__lead">Giải cứu căn bản Hóa học · KHTN THCS</p>
+      <div class="gate__tabs" role="tablist" aria-label="Chọn vai trò">
+        <button type="button" role="tab" data-gate-tab="student" aria-selected="true">🧑‍🎓 Học sinh</button>
+        <button type="button" role="tab" data-gate-tab="teacher" aria-selected="false">👩‍🏫 Giáo viên</button>
       </div>
+      <form id="gateStudent" class="gate__form" autocomplete="off">
+        <label>Họ và tên
+          <input id="gName" maxlength="50" placeholder="VD: Nguyễn Minh Anh" required>
+        </label>
+        <label>Lớp
+          <input id="gClass" maxlength="10" placeholder="VD: 8A1" required>
+        </label>
+        <button class="btn" type="submit">Vào học ▶</button>
+        <p class="gate__hint">💡 Lần sau, nhập <b>đúng họ tên và lớp</b> này để tiếp tục tiến độ cũ – kể cả trên máy khác.</p>
+      </form>
+      <form id="gateTeacher" class="gate__form" autocomplete="off" hidden>
+        <label>Mã PIN giáo viên
+          <input id="gPin" type="password" inputmode="numeric" maxlength="32" placeholder="Nhập mã PIN" required>
+        </label>
+        <button class="btn" data-mod="m5" type="submit">Mở Dashboard Giáo viên</button>
+      </form>
+      <p class="gate__error" id="gateError" role="alert"></p>
     </div>
-  </header>
+  </div>
 
-  <main id="top">
-    <!-- ========== GIỚI THIỆU (HERO) ========== -->
-    <section class="hero">
-      <div class="hero-text">
-        <span class="pill">🚨 Báo động phòng thí nghiệm</span>
-        <h1>Các nguyên tố đang <span class="hl">hỗn loạn</span>!<br />Hãy giải cứu chúng.</h1>
-        <p>Trả lời đúng để ổn định phòng thí nghiệm, tích lũy XP, lên cấp và ghi danh trên Bảng vàng của lớp.</p>
-        <form class="start-form" id="startForm" autocomplete="off">
-          <input id="nameInput" maxlength="30" placeholder="Nhập tên của em..." aria-label="Tên người chơi" required />
-          <button class="btn btn-primary" type="submit">Bắt đầu giải cứu ▶</button>
-        </form>
+
+  <div class="app" id="app">
+    <!-- ============ SIDEBAR (Desktop / Tablet) ============ -->
+    <aside class="sidebar" aria-label="Điều hướng chính">
+      <a href="#/home" class="brand" aria-label="ChemRescue – Trang tổng quan">
+        <span class="brand__logo" aria-hidden="true">⚗️</span>
+        <span class="brand__text">Chem<b>Rescue</b></span>
+      </a>
+
+      <nav class="side-nav" id="sideNav"></nav>
+
+      <div class="sidebar__footer">
+        <div class="user-card" id="userCard"></div>
       </div>
-      <div class="hero-art" aria-hidden="true">
-        <div class="atom">
-          <div class="nucleus">Na</div>
-          <div class="orbit o1"><i></i></div>
-          <div class="orbit o2"><i></i></div>
-          <div class="orbit o3"><i></i></div>
+    </aside>
+
+    <!-- ============ TOPBAR ============ -->
+    <header class="topbar">
+      <a href="#/home" class="topbar__brand" aria-label="Về trang tổng quan">⚗️</a>
+      <div class="topbar__title">
+        <h1 id="pageTitle">Tổng quan</h1>
+        <p id="pageSubtitle">Trạm chỉ huy giải cứu môn Hóa</p>
+      </div>
+
+      <div class="topbar__stats">
+        <span class="sync-badge" id="syncBadge" data-status="ok" title="Tiến độ đã được lưu trên máy chủ"></span>
+        <div class="pill pill--streak" title="Chuỗi ngày học liên tục">
+          <span class="pill__icon flame" aria-hidden="true">🔥</span>
+          <b id="streakCount">0</b><span class="sr-only"> ngày liên tiếp</span>
         </div>
-      </div>
-    </section>
 
-    <!-- ========== NHIỆM VỤ ========== -->
-    <section id="missions" class="section">
-      <h2 class="section-title">🎯 Nhiệm vụ hôm nay</h2>
-      <div class="missions">
-        <article class="mission" data-mod="m1">
-          <div class="mission-icon">🧪</div>
-          <h3>Thử thách Hóa trị</h3>
-          <p>10 câu hỏi ngẫu nhiên về hóa trị, lập công thức và kí hiệu nguyên tố. 3 mạng – đừng để vỡ ống nghiệm!</p>
-          <button class="btn btn-mod" data-action="play">Chơi ngay</button>
-        </article>
-        <article class="mission" data-mod="m2">
-          <div class="mission-icon">🧩</div>
-          <h3>Kho nguyên tố</h3>
-          <p>Tra cứu tên IUPAC, kí hiệu, khối lượng nguyên tử và hóa trị của các nguyên tố thường gặp ở THCS.</p>
-          <a class="btn btn-mod" href="#elements">Khám phá</a>
-        </article>
-        <article class="mission" data-mod="m3">
-          <div class="mission-icon">🏆</div>
-          <h3>Bảng vàng</h3>
-          <p>Xem ai đang dẫn đầu lớp và phá kỷ lục bằng chuỗi trả lời đúng liên tiếp.</p>
-          <a class="btn btn-mod" href="#leaderboard">Xem xếp hạng</a>
-        </article>
-      </div>
-    </section>
-
-    <!-- ========== MÀN CHƠI (ẩn cho đến khi bấm Chơi) ========== -->
-    <section id="game" class="section game" hidden>
-      <div class="game-card">
-        <div class="hud">
-          <span class="hearts" id="hudHearts">❤️❤️❤️</span>
-          <span class="progress-text" id="hudProgress">Câu 1/10</span>
-          <span class="combo" id="hudCombo">🔥 x0</span>
-          <span class="score" id="hudScore">⭐ 0</span>
-        </div>
-        <div class="progress"><div class="progress-fill" id="hudBar"></div></div>
-
-        <!-- Khu vực câu hỏi -->
-        <div id="questionView">
-          <span class="tag" id="qTopic">Hóa trị</span>
-          <h3 class="question" id="qContent">Đang tải câu hỏi...</h3>
-          <div class="options" id="qOptions"></div>
-          <div class="feedback" id="qFeedback" hidden></div>
-          <div class="game-actions">
-            <button class="btn btn-ghost" id="quitBtn">Thoát</button>
-            <button class="btn btn-primary" id="nextBtn" hidden>Câu tiếp theo →</button>
+        <div class="xp" title="Kinh nghiệm (EXP)">
+          <span class="xp__level" id="levelBadge">Lv 1</span>
+          <div class="xp__bar" role="progressbar" aria-label="Tiến độ EXP" id="xpBar"
+               aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="xp__fill" id="xpFill"></div>
           </div>
+          <span class="xp__text" id="xpText">0/100</span>
         </div>
 
-        <!-- Màn hình kết quả -->
-        <div id="resultView" class="result" hidden>
-          <div class="result-emoji" id="resultEmoji">🎉</div>
-          <h3 id="resultTitle">Giải cứu thành công!</h3>
-          <p id="resultText"></p>
-          <div class="result-stats">
-            <div><b id="resultScore">0</b><span>điểm</span></div>
-            <div><b id="resultCorrect">0/0</b><span>câu đúng</span></div>
-            <div><b id="resultXp">+0</b><span>XP</span></div>
-          </div>
-          <div class="game-actions center">
-            <button class="btn btn-ghost" id="closeResultBtn">Về trang chủ</button>
-            <button class="btn btn-primary" id="replayBtn">Chơi lại ↻</button>
+        <div class="pill pill--gem" title="Kim cương">
+          <span class="pill__icon" aria-hidden="true">💎</span>
+          <b id="gemCount">0</b><span class="sr-only"> kim cương</span>
+        </div>
+
+        <div class="menu-wrap">
+          <button class="avatar-btn" id="avatarBtn" aria-haspopup="menu" aria-expanded="false" aria-controls="userMenu">
+            <span id="avatarEmoji">🧑‍🔬</span>
+          </button>
+          <div class="menu" id="userMenu" role="menu" hidden>
+            <button role="menuitem" data-action="export-db">💾 Tải bản sao tiến độ (JSON)</button>
+            <button role="menuitem" data-action="reset-db">♻️ Làm lại từ đầu</button>
+            <button role="menuitem" data-action="logout">🚪 Đăng xuất</button>
           </div>
         </div>
       </div>
-    </section>
+    </header>
 
-    <!-- ========== KHO NGUYÊN TỐ ========== -->
-    <section id="elements" class="section">
-      <h2 class="section-title">🧩 Kho nguyên tố</h2>
-      <div class="toolbar">
-        <input type="search" id="elementSearch" placeholder="Tìm theo tên hoặc kí hiệu (vd: sodium, natri, Na)..." />
-        <div class="chips" id="categoryChips">
-          <button class="chip active" data-category="">Tất cả</button>
-          <button class="chip" data-category="kim-loai">Kim loại</button>
-          <button class="chip" data-category="phi-kim">Phi kim</button>
-          <button class="chip" data-category="khi-hiem">Khí hiếm</button>
-        </div>
-      </div>
-      <div class="element-grid" id="elementGrid"><p class="muted">Đang tải dữ liệu...</p></div>
-    </section>
+    <!-- ============ MAIN VIEW ============ -->
+    <main id="main" class="main" tabindex="-1">
+      <div id="view" class="view" aria-live="polite"></div>
+    </main>
 
-    <!-- ========== BẢNG VÀNG ========== -->
-    <section id="leaderboard" class="section">
-      <h2 class="section-title">🏆 Bảng vàng</h2>
-      <ol class="leaderboard" id="leaderboardList"><li class="muted">Đang tải...</li></ol>
-    </section>
-  </main>
+    <!-- ============ BOTTOM NAV (Mobile) ============ -->
+    <nav class="bottom-nav" id="bottomNav" aria-label="Điều hướng nhanh"></nav>
+  </div>
 
-  <footer class="footer">
-    <span>ChemRescue · Đề tài nghiên cứu khoa học</span>
-    <span class="status" id="serverStatus"><i></i> Đang kiểm tra máy chủ...</span>
-  </footer>
+  <!-- Toast & Modal toàn cục -->
+  <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="false"></div>
 
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="modal" id="levelModal" role="dialog" aria-modal="true" aria-labelledby="levelModalTitle" hidden>
+    <div class="modal__card">
+      <div class="modal__burst" aria-hidden="true">⭐</div>
+      <h2 id="levelModalTitle">Lên cấp!</h2>
+      <p>Bạn đã đạt <b id="levelModalValue">Lv 2</b>. Kho kiến thức mở rộng thêm một bậc.</p>
+      <button class="btn" data-action="close-modal">Tuyệt vời!</button>
+    </div>
+  </div>
 
-  <!-- Toàn bộ JavaScript chia module, nạp từ main.js -->
-  <script type="module" src="/js/main.js"></script>
+  <!-- session.js chạy đầu tiên: đăng nhập → tải tiến độ → nạp db.js, app.js và 5 phân hệ -->
+  <script src="js/session.js"></script>
+  <!-- Chart.js được teacher.js nạp khi cần (CDN, có dự phòng). Muốn chạy offline: đặt chart.umd.js vào js/vendor/ -->
 </body>
 </html>

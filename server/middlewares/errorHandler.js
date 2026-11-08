@@ -11,6 +11,9 @@ function apiNotFound(req, res) {
 // Express nhận ra đây là middleware xử lý lỗi nhờ có đủ 4 tham số
 // eslint-disable-next-line no-unused-vars
 function errorHandler(err, req, res, next) {
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'Dữ liệu gửi lên quá lớn' });
+  }
   if (err.type === 'entity.parse.failed') {
     return res.status(400).json({ error: 'Dữ liệu gửi lên không phải JSON hợp lệ' });
   }

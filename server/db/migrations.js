@@ -66,8 +66,45 @@ const MIGRATIONS = [
       );
     `,
   },
+  {
+    version: 3,
+    name: 'tai_khoan_hoc_sinh_va_su_kien',
+    sql: `
+      -- Tài khoản học sinh + toàn bộ tiến độ học của 5 phân hệ
+      CREATE TABLE IF NOT EXISTS students (
+        id             INTEGER PRIMARY KEY AUTOINCREMENT,
+        name           TEXT    NOT NULL,                -- Họ tên hiển thị, vd 'Nguyễn Minh Anh'
+        name_key       TEXT    NOT NULL,                -- Họ tên chuẩn hóa (chữ thường) để tìm lại tài khoản
+        class_name     TEXT    NOT NULL,                -- Lớp, vd '8A1'
+        token          TEXT    NOT NULL UNIQUE,         -- Mã bí mật trình duyệt dùng để lưu tiến độ
+        state          TEXT,                            -- Tiến độ đầy đủ (JSON) của 5 phân hệ
+        -- Các cột tóm tắt, tính sẵn từ state để Dashboard Giáo viên đọc nhanh:
+        level          INTEGER NOT NULL DEFAULT 1,
+        exp            INTEGER NOT NULL DEFAULT 0,
+        streak         INTEGER NOT NULL DEFAULT 0,
+        last_active    TEXT,                            -- 'YYYY-MM-DD'
+        topic_scores   TEXT    NOT NULL DEFAULT '{}',   -- JSON {chủ đề: %} của bài chẩn đoán gần nhất
+        diagnostics    INTEGER NOT NULL DEFAULT 0,      -- Số lần làm bài chẩn đoán
+        minutes_by_day TEXT    NOT NULL DEFAULT '{}',   -- JSON {'YYYY-MM-DD': số phút học}
+        active_dates   TEXT    NOT NULL DEFAULT '[]',   -- JSON ['YYYY-MM-DD', ...]
+        created_at     TEXT    NOT NULL DEFAULT (datetime('now')),
+        updated_at     TEXT    NOT NULL DEFAULT (datetime('now')),
+        UNIQUE (name_key, class_name)
+      );
+
+      -- Luồng hoạt động hiển thị cho giáo viên (vd: "ôn 10 thẻ Flashcard")
+      CREATE TABLE IF NOT EXISTS events (
+        id         INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_id INTEGER NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+        icon       TEXT,
+        text       TEXT    NOT NULL,
+        created_at TEXT    NOT NULL DEFAULT (datetime('now'))
+      );
+      CREATE INDEX IF NOT EXISTS idx_events_student ON events (student_id);
+    `,
+  },
   // Ví dụ phiên bản sau (bỏ chú thích khi cần):
-  // { version: 3, name: 'them_cot_lop_hoc', sql: `ALTER TABLE scores ADD COLUMN class_name TEXT;` },
+  // { version: 4, name: 'them_cot_truong', sql: `ALTER TABLE students ADD COLUMN school TEXT;` },
 ];
 
 function runMigrations(db) {
