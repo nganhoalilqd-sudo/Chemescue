@@ -23,7 +23,7 @@ Lần chạy đầu, server tự tạo file `data/chemrescue.db`, tự tạo b�
 | Phương thức | Đường dẫn | Chức năng |
 |---|---|---|
 | GET | `/api/health` | Kiểm tra server còn hoạt động |
-| GET | `/api/elements` | Danh sách nguyên tố (`?category=kim-loai`, `?search=sat`) |
+| GET | `/api/elements` | Danh sách nguyên tố (`?category=kim-loai`, `?search=natri`) |
 | GET | `/api/elements/:symbol` | Chi tiết một nguyên tố, vd `/api/elements/Fe` |
 | GET | `/api/questions` | Câu hỏi ngẫu nhiên, không kèm đáp án (`?limit=10&topic=hoa-tri`) |
 | GET | `/api/questions/topics` | Các chủ đề và số câu hỏi |
@@ -33,8 +33,9 @@ Lần chạy đầu, server tự tạo file `data/chemrescue.db`, tự tạo b�
 
 ## Thêm câu hỏi / nguyên tố
 
-Sửa file `server/db/seed-data.js`. Dữ liệu mẫu chỉ được nạp khi bảng còn trống,
-nên muốn nạp lại thì xóa file `data/chemrescue.db` (trên máy) rồi chạy lại server.
+Sửa file `server/db/seed-data.js` (tên nguyên tố theo IUPAC – chương trình GDPT 2018), rồi Commit + Push.
+Khi khởi động, server tự nhận ra file đã thay đổi và cập nhật bảng nguyên tố + câu hỏi.
+Điểm số trong Bảng vàng được giữ nguyên.
 
 ## Deploy lên Railway
 

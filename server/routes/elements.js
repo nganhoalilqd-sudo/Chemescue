@@ -12,7 +12,7 @@ const { getDb } = require('../db/database');
 const router = express.Router();
 const CATEGORIES = ['kim-loai', 'phi-kim', 'khi-hiem'];
 
-// Bỏ dấu tiếng Việt để tìm "sat" cũng ra "Sắt"
+// Bỏ dấu tiếng Việt để tìm "sat" cũng ra "Sắt" (Iron)
 const normalize = (text) =>
   String(text).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase().trim();
 
@@ -35,7 +35,11 @@ router.get('/', (req, res) => {
   // Lọc tìm kiếm bằng JavaScript vì SQLite không tự bỏ dấu tiếng Việt
   if (search) {
     const keyword = normalize(search);
-    rows = rows.filter((el) => normalize(el.name_vi).includes(keyword) || normalize(el.symbol) === keyword);
+    rows = rows.filter((el) =>
+      normalize(el.name).includes(keyword) ||
+      normalize(el.common_name || '').includes(keyword) ||
+      normalize(el.symbol) === keyword
+    );
   }
 
   res.json({ count: rows.length, data: rows });

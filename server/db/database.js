@@ -1,13 +1,13 @@
 /**
  * server/db/database.js
- * Mở kết nối SQLite, tự tạo thư mục + file .db nếu chưa có, chạy migrate và nạp dữ liệu mẫu.
+ * Mở kết nối SQLite, tự tạo thư mục + file .db nếu chưa có, chạy migrate và đồng bộ dữ liệu mẫu.
  * Các file khác lấy kết nối qua hàm getDb().
  */
 const fs = require('fs');
 const path = require('path');
 const Database = require('better-sqlite3');
 const { runMigrations } = require('./migrations');
-const { seedIfEmpty } = require('./seed');
+const { syncSeedData } = require('./seed');
 
 let db = null;
 
@@ -21,7 +21,7 @@ function initDatabase(dbPath) {
   db.pragma('foreign_keys = ON');
 
   runMigrations(db);
-  seedIfEmpty(db);
+  syncSeedData(db);
   return db;
 }
 

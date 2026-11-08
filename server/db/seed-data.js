@@ -1,42 +1,45 @@
 /**
  * server/db/seed-data.js
- * Dữ liệu mẫu nạp vào CSDL ở lần chạy đầu tiên.
- * Giáo viên có thể sửa/thêm trực tiếp tại đây; sau đó xóa file .db (hoặc dùng CSDL mới)
- * để nạp lại – dữ liệu chỉ được nạp khi bảng còn trống.
+ * Dữ liệu mẫu: nguyên tố + câu hỏi. Tên nguyên tố theo IUPAC (chương trình GDPT 2018 – môn KHTN),
+ * tên tiếng Việt quen gọi ghi kèm ở cột common_name.
+ *
+ * Giáo viên sửa/thêm trực tiếp tại đây rồi Commit + Push: server tự nhận ra file đã thay đổi
+ * và cập nhật CSDL khi khởi động lại – điểm số của học sinh được giữ nguyên.
  */
 
-// [Z, kí hiệu, tên tiếng Việt, nguyên tử khối, hóa trị, nhóm]
+// [Z, kí hiệu, tên IUPAC, tên tiếng Việt quen gọi, khối lượng nguyên tử (amu), hóa trị, nhóm]
 const ELEMENTS = [
-  [1, 'H', 'Hiđro', 1, 'I', 'phi-kim'],
-  [2, 'He', 'Heli', 4, null, 'khi-hiem'],
-  [3, 'Li', 'Liti', 7, 'I', 'kim-loai'],
-  [4, 'Be', 'Beri', 9, 'II', 'kim-loai'],
-  [5, 'B', 'Bo', 11, 'III', 'phi-kim'],
-  [6, 'C', 'Cacbon', 12, 'II, IV', 'phi-kim'],
-  [7, 'N', 'Nitơ', 14, 'II, III, IV, V', 'phi-kim'],
-  [8, 'O', 'Oxi', 16, 'II', 'phi-kim'],
-  [9, 'F', 'Flo', 19, 'I', 'phi-kim'],
-  [10, 'Ne', 'Neon', 20, null, 'khi-hiem'],
-  [11, 'Na', 'Natri', 23, 'I', 'kim-loai'],
-  [12, 'Mg', 'Magie', 24, 'II', 'kim-loai'],
-  [13, 'Al', 'Nhôm', 27, 'III', 'kim-loai'],
-  [14, 'Si', 'Silic', 28, 'IV', 'phi-kim'],
-  [15, 'P', 'Photpho', 31, 'III, V', 'phi-kim'],
-  [16, 'S', 'Lưu huỳnh', 32, 'II, IV, VI', 'phi-kim'],
-  [17, 'Cl', 'Clo', 35.5, 'I', 'phi-kim'],
-  [18, 'Ar', 'Agon', 40, null, 'khi-hiem'],
-  [19, 'K', 'Kali', 39, 'I', 'kim-loai'],
-  [20, 'Ca', 'Canxi', 40, 'II', 'kim-loai'],
-  [26, 'Fe', 'Sắt', 56, 'II, III', 'kim-loai'],
-  [29, 'Cu', 'Đồng', 64, 'I, II', 'kim-loai'],
-  [30, 'Zn', 'Kẽm', 65, 'II', 'kim-loai'],
-  [47, 'Ag', 'Bạc', 108, 'I', 'kim-loai'],
-  [56, 'Ba', 'Bari', 137, 'II', 'kim-loai'],
-].map(([atomic_number, symbol, name_vi, atomic_mass, valence, category]) => ({
-  atomic_number, symbol, name_vi, atomic_mass, valence, category,
+  [1, 'H', 'Hydrogen', null, 1, 'I', 'phi-kim'],
+  [2, 'He', 'Helium', null, 4, null, 'khi-hiem'],
+  [3, 'Li', 'Lithium', null, 7, 'I', 'kim-loai'],
+  [4, 'Be', 'Beryllium', null, 9, 'II', 'kim-loai'],
+  [5, 'B', 'Boron', null, 11, 'III', 'phi-kim'],
+  [6, 'C', 'Carbon', null, 12, 'II, IV', 'phi-kim'],
+  [7, 'N', 'Nitrogen', null, 14, 'II, III, IV, V', 'phi-kim'],
+  [8, 'O', 'Oxygen', null, 16, 'II', 'phi-kim'],
+  [9, 'F', 'Fluorine', null, 19, 'I', 'phi-kim'],
+  [10, 'Ne', 'Neon', null, 20, null, 'khi-hiem'],
+  [11, 'Na', 'Sodium', 'Natri', 23, 'I', 'kim-loai'],
+  [12, 'Mg', 'Magnesium', null, 24, 'II', 'kim-loai'],
+  [13, 'Al', 'Aluminium', 'Nhôm', 27, 'III', 'kim-loai'],
+  [14, 'Si', 'Silicon', null, 28, 'IV', 'phi-kim'],
+  [15, 'P', 'Phosphorus', null, 31, 'III, V', 'phi-kim'],
+  [16, 'S', 'Sulfur', 'Lưu huỳnh', 32, 'II, IV, VI', 'phi-kim'],
+  [17, 'Cl', 'Chlorine', null, 35.5, 'I', 'phi-kim'],
+  [18, 'Ar', 'Argon', null, 40, null, 'khi-hiem'],
+  [19, 'K', 'Potassium', 'Kali', 39, 'I', 'kim-loai'],
+  [20, 'Ca', 'Calcium', null, 40, 'II', 'kim-loai'],
+  [26, 'Fe', 'Iron', 'Sắt', 56, 'II, III', 'kim-loai'],
+  [29, 'Cu', 'Copper', 'Đồng', 64, 'I, II', 'kim-loai'],
+  [30, 'Zn', 'Zinc', 'Kẽm', 65, 'II', 'kim-loai'],
+  [47, 'Ag', 'Silver', 'Bạc', 108, 'I', 'kim-loai'],
+  [56, 'Ba', 'Barium', null, 137, 'II', 'kim-loai'],
+].map(([atomic_number, symbol, name, common_name, atomic_mass, valence, category]) => ({
+  atomic_number, symbol, name, common_name, atomic_mass, valence, category,
 }));
 
 // topic: 'hoa-tri' (xác định hóa trị) | 'cong-thuc' (lập công thức) | 'nguyen-to' (kí hiệu, tên)
+// answer_index: vị trí đáp án đúng trong options, đếm từ 0 (A = 0, B = 1, C = 2, D = 3)
 const QUESTIONS = [
   { topic: 'hoa-tri', content: 'Hóa trị của Al trong hợp chất Al₂O₃ là:',
     options: ['I', 'II', 'III', 'IV'], answer_index: 2,
@@ -59,12 +62,12 @@ const QUESTIONS = [
   { topic: 'hoa-tri', content: 'Trong hợp chất H₂S, nguyên tố S có hóa trị:',
     options: ['I', 'II', 'IV', 'VI'], answer_index: 1,
     explanation: 'H có hóa trị I. 2 × I = 1 × b → b = II.' },
-  { topic: 'hoa-tri', content: 'Nhóm nguyên tử SO₄ (sunfat) có hóa trị:',
+  { topic: 'hoa-tri', content: 'Nhóm nguyên tử SO₄ (sulfate) có hóa trị:',
     options: ['I', 'II', 'III', 'IV'], answer_index: 1,
-    explanation: 'Trong H₂SO₄, H hóa trị I: 2 × I = 1 × b → nhóm SO₄ có hóa trị II.' },
-  { topic: 'hoa-tri', content: 'Nhóm nguyên tử OH (hiđroxit) có hóa trị:',
+    explanation: 'Trong H₂SO₄, H có hóa trị I: 2 × I = 1 × b → nhóm SO₄ có hóa trị II.' },
+  { topic: 'hoa-tri', content: 'Nhóm nguyên tử OH (hydroxide) có hóa trị:',
     options: ['I', 'II', 'III', 'IV'], answer_index: 0,
-    explanation: 'Trong NaOH, Na hóa trị I: 1 × I = 1 × b → nhóm OH có hóa trị I.' },
+    explanation: 'Trong NaOH, Na có hóa trị I: 1 × I = 1 × b → nhóm OH có hóa trị I.' },
   { topic: 'cong-thuc', content: 'Công thức hóa học của hợp chất tạo bởi Al (III) và O (II) là:',
     options: ['AlO', 'Al₂O₃', 'Al₃O₂', 'AlO₃'], answer_index: 1,
     explanation: 'x × III = y × II → x/y = 2/3 → Al₂O₃.' },
@@ -74,24 +77,24 @@ const QUESTIONS = [
   { topic: 'cong-thuc', content: 'Công thức hóa học của hợp chất tạo bởi Ca (II) và nhóm PO₄ (III) là:',
     options: ['CaPO₄', 'Ca₂(PO₄)₃', 'Ca₃(PO₄)₂', 'Ca₃PO₄'], answer_index: 2,
     explanation: 'x × II = y × III → x/y = 3/2 → Ca₃(PO₄)₂.' },
-  { topic: 'cong-thuc', content: 'Công thức hóa học của natri sunfat (Na hóa trị I, nhóm SO₄ hóa trị II) là:',
+  { topic: 'cong-thuc', content: 'Công thức hóa học của sodium sulfate (Na hóa trị I, nhóm SO₄ hóa trị II) là:',
     options: ['NaSO₄', 'Na₂SO₄', 'Na(SO₄)₂', 'Na₃SO₄'], answer_index: 1,
     explanation: 'x × I = y × II → x/y = 2/1 → Na₂SO₄.' },
-  { topic: 'nguyen-to', content: 'Kí hiệu hóa học của nguyên tố Natri là:',
-    options: ['N', 'Na', 'Ne', 'Nt'], answer_index: 1,
-    explanation: 'Natri có tên Latin là Natrium → kí hiệu Na. (N là Nitơ, Ne là Neon.)' },
+  { topic: 'nguyen-to', content: 'Kí hiệu hóa học của nguyên tố sodium (natri) là:',
+    options: ['N', 'Na', 'Ne', 'S'], answer_index: 1,
+    explanation: 'Sodium có tên Latin là Natrium nên kí hiệu là Na. (N là nitrogen, Ne là neon, S là sulfur.)' },
   { topic: 'nguyen-to', content: 'Nguyên tố có kí hiệu hóa học Fe là:',
-    options: ['Flo', 'Sắt', 'Photpho', 'Bạc'], answer_index: 1,
-    explanation: 'Fe xuất phát từ tên Latin Ferrum – nghĩa là sắt.' },
+    options: ['Fluorine', 'Iron (sắt)', 'Phosphorus', 'Silver (bạc)'], answer_index: 1,
+    explanation: 'Fe bắt nguồn từ tên Latin Ferrum, là nguyên tố iron (sắt). Fluorine là F, phosphorus là P, silver là Ag.' },
   { topic: 'nguyen-to', content: 'Kí hiệu K là của nguyên tố nào?',
-    options: ['Kẽm', 'Kali', 'Canxi', 'Clo'], answer_index: 1,
-    explanation: 'K là Kali (Latin: Kalium). Kẽm là Zn, Canxi là Ca, Clo là Cl.' },
+    options: ['Zinc (kẽm)', 'Potassium (kali)', 'Calcium', 'Chlorine'], answer_index: 1,
+    explanation: 'K là potassium (kali), từ tên Latin Kalium. Zinc là Zn, calcium là Ca, chlorine là Cl.' },
   { topic: 'nguyen-to', content: 'Nguyên tố nào sau đây là khí hiếm?',
-    options: ['O', 'N', 'Ne', 'Cl'], answer_index: 2,
+    options: ['Oxygen', 'Nitrogen', 'Neon', 'Chlorine'], answer_index: 2,
     explanation: 'Neon (Ne) thuộc nhóm khí hiếm, rất khó tham gia phản ứng hóa học.' },
-  { topic: 'nguyen-to', content: 'Nguyên tử khối của nguyên tố Oxi (O) là:',
-    options: ['8', '12', '16', '32'], answer_index: 2,
-    explanation: 'Nguyên tử khối của O là 16 amu. Số 8 là số hiệu nguyên tử (số proton).' },
+  { topic: 'nguyen-to', content: 'Khối lượng nguyên tử của oxygen (O) là:',
+    options: ['8 amu', '12 amu', '16 amu', '32 amu'], answer_index: 2,
+    explanation: 'Khối lượng nguyên tử của oxygen là 16 amu. Số 8 là số hiệu nguyên tử (số proton).' },
 ];
 
 module.exports = { ELEMENTS, QUESTIONS };

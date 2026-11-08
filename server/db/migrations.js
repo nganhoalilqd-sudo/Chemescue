@@ -49,8 +49,25 @@ const MIGRATIONS = [
       CREATE INDEX IF NOT EXISTS idx_scores_score    ON scores (score DESC);
     `,
   },
+  {
+    version: 2,
+    name: 'ten_nguyen_to_iupac',
+    sql: `
+      -- Chuyển sang tên IUPAC theo chương trình GDPT 2018 (môn KHTN):
+      --   name        : tên IUPAC, vd 'Sodium'
+      --   common_name : tên tiếng Việt quen gọi (nếu có), vd 'Natri'
+      ALTER TABLE elements RENAME COLUMN name_vi TO name;
+      ALTER TABLE elements ADD COLUMN common_name TEXT;
+
+      -- Bảng ghi thông tin nội bộ của ứng dụng (vd: phiên bản dữ liệu mẫu đã nạp)
+      CREATE TABLE IF NOT EXISTS app_meta (
+        key   TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      );
+    `,
+  },
   // Ví dụ phiên bản sau (bỏ chú thích khi cần):
-  // { version: 2, name: 'them_cot_lop_hoc', sql: `ALTER TABLE scores ADD COLUMN class_name TEXT;` },
+  // { version: 3, name: 'them_cot_lop_hoc', sql: `ALTER TABLE scores ADD COLUMN class_name TEXT;` },
 ];
 
 function runMigrations(db) {

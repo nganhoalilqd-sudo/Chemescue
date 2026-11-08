@@ -11,14 +11,17 @@ const grid = () => document.getElementById('elementGrid');
 let allElements = [];
 let currentCategory = '';
 
-// Bỏ dấu tiếng Việt để tìm "sat" vẫn ra "Sắt"
+// Bỏ dấu tiếng Việt để tìm "sat" vẫn ra "Sắt" (Iron)
 const normalize = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/gi, 'd').toLowerCase().trim();
 
 function render() {
   const keyword = normalize(document.getElementById('elementSearch').value);
   const list = allElements.filter((el) =>
     (!currentCategory || el.category === currentCategory) &&
-    (!keyword || normalize(el.name_vi).includes(keyword) || normalize(el.symbol) === keyword)
+    (!keyword ||
+      normalize(el.name).includes(keyword) ||
+      normalize(el.common_name || '').includes(keyword) ||
+      normalize(el.symbol) === keyword)
   );
 
   if (!list.length) {
@@ -31,8 +34,9 @@ function render() {
              title="${escapeHtml(CATEGORY_NAMES[el.category])}">
       <span class="z">${el.atomic_number}</span>
       <div class="symbol">${escapeHtml(el.symbol)}</div>
-      <div class="name">${escapeHtml(el.name_vi)}</div>
-      <div class="meta">NTK: ${el.atomic_mass}<br>Hóa trị: ${escapeHtml(el.valence || '—')}</div>
+      <div class="name">${escapeHtml(el.name)}</div>
+      <div class="common">${el.common_name ? `(${escapeHtml(el.common_name)})` : '&nbsp;'}</div>
+      <div class="meta">${el.atomic_mass} amu<br>Hóa trị: ${escapeHtml(el.valence || '—')}</div>
     </article>`).join('');
 }
 
