@@ -1,0 +1,18 @@
+# Thư viện cài bằng "npm install" – Railway tự cài lại, KHÔNG đẩy lên GitHub
+node_modules/
+
+# File cơ sở dữ liệu SQLite – server tự tạo khi chạy lần đầu
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Biến môi trường bí mật
+.env
+
+# Nhật ký & file rác của hệ điều hành
+npm-debug.log*
+logs/
+*.log
+.DS_Store
+Thumbs.db

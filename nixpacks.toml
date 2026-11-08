@@ -1,0 +1,11 @@
+# Cấu hình cho builder Nixpacks của Railway.
+# Lưu ý: dịch vụ mới trên Railway mặc định dùng Railpack – Railpack bỏ qua file này
+# và đọc trực tiếp package.json (engines + scripts.start), nên dự án chạy được với cả hai.
+
+[phases.setup]
+# "..." = giữ gói mặc định (Node.js); thêm python3, gcc, make để biên dịch
+# better-sqlite3 trong trường hợp không tải được bản dựng sẵn.
+nixPkgs = ["...", "python3", "gcc", "gnumake"]
+
+[start]
+cmd = "npm start"
