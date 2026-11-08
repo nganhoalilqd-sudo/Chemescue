@@ -408,8 +408,10 @@
 
   const ACTIONS = {
     'export-db': () => { download(`chemrescue-tien-do-${DB.localDate()}.json`, DB.exportJSON(), 'application/json'); toast('Đã tải bản sao tiến độ', '💾'); },
-    'reset-db': () => {
-      if (!window.confirm('Xóa TOÀN BỘ tiến độ (EXP, bài làm, huy hiệu…) và làm lại từ đầu?\nThao tác này không thể hoàn tác.')) return;
+    'reset-db': async () => {
+      const ok = await window.ChemSession.confirm('Xóa TOÀN BỘ tiến độ (EXP, bài làm, huy hiệu…) và làm lại từ đầu?\nThao tác này không thể hoàn tác.',
+        { title: 'Làm lại từ đầu', okLabel: 'Xóa tiến độ', danger: true, icon: '♻️' });
+      if (!ok) return;
       DB.reset(); renderTopbarStats(); navigate(); toast('Đã xóa tiến độ – bắt đầu lại từ đầu', '♻️');
     },
     'logout': () => window.ChemSession?.logout(),

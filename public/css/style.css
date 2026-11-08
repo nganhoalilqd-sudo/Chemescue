@@ -698,5 +698,13 @@ body.is-booting .app { display: none; }
 .tc-pin__form input:focus { outline: none; border-color: var(--m5); }
 .tc-pin__error { min-height: 1.2em; margin: 0; font-weight: 600; color: var(--bad); }
 .tc-act { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-.tc-del { opacity: .55; }
-.tc-del:hover, .tc-del:focus-visible { opacity: 1; color: var(--bad); }
+.tc-del { color: var(--bad); }
+.tc-del:hover, .tc-del:focus-visible { background: var(--bad-bg); border-color: var(--bad); }
+
+/* Hộp xác nhận trong trang (thay window.confirm) */
+.confirm-box { display: grid; z-index: 200; }
+.confirm-box .modal__card { max-width: 420px; text-align: center; }
+.confirm-box__icon { font-size: 2.6rem; line-height: 1; margin-bottom: 8px; }
+.confirm-box p { color: var(--muted); }
+.confirm-box__actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+.btn--danger { background: var(--bad); box-shadow: 0 4px 0 #b91c1c; }

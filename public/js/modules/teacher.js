@@ -328,7 +328,7 @@
             ${r.level === 'ok' ? '' : done
               ? '<span class="tc-done">✓ Đã nhắc</span>'
               : `<button class="btn btn--ghost btn--sm" data-remind="${r.id}">🔔 Nhắc</button>`}
-            <button class="btn btn--ghost btn--sm tc-del" data-del="${r.id}" title="Xóa tài khoản ${esc(r.name)}" aria-label="Xóa tài khoản ${esc(r.name)}">🗑</button>
+            <button class="btn btn--ghost btn--sm tc-del" data-del="${r.id}" title="Xóa tài khoản ${esc(r.name)}" aria-label="Xóa tài khoản ${esc(r.name)}">🗑 Xóa</button>
           </div>
         </div>`;
     }).join('') : DB.count('students') === 0
@@ -663,7 +663,9 @@ ${body.map((r, i) => `<tr>${r.map((v, j) => (typeof v === 'number' ? `<td>${v}</
   async function deleteStudent(id) {
     const st = DB.get('students', id);
     if (!st) return;
-    if (!window.confirm(`Xóa tài khoản "${st.name}" (lớp ${st.class_id})?\nToàn bộ tiến độ học của em này sẽ bị xóa vĩnh viễn.`)) return;
+    const ok = await Session.confirm(`Xóa tài khoản "${st.name}" (lớp ${st.class_id})?\nToàn bộ tiến độ học của em này sẽ bị xóa vĩnh viễn.`,
+      { title: 'Xóa tài khoản học sinh', okLabel: 'Xóa', danger: true, icon: '🗑' });
+    if (!ok) return;
     try {
       await Session.api(`/api/teacher/students/${id}`, { method: 'DELETE', pin: Session.teacherPin() });
       toast(`Đã xóa tài khoản <b>${esc(st.name)}</b>`, '🗑');

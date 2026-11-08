@@ -27,6 +27,46 @@
   const IDLE_LIMIT = 120000;   // không thao tác quá 2 phút → không tính là đang học
 
   const $ = (sel) => document.querySelector(sel);
+  const escHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  /* ---------- Hộp xác nhận vẽ trong trang ----------
+     Không dùng window.confirm()/alert() vì nhiều trình duyệt trong ứng dụng
+     (Zalo, Facebook, khung trình duyệt nhúng…) chặn và tự trả về "Hủy".
+     Dùng: if (await ChemSession.confirm('Xóa?', { okLabel: 'Xóa', danger: true })) { … } */
+  function confirmBox(message, { title = 'Xác nhận', okLabel = 'Đồng ý', cancelLabel = 'Hủy', danger = false, icon = '❓' } = {}) {
+    return new Promise((resolve) => {
+      const prevFocus = document.activeElement;
+      const wrap = document.createElement('div');
+      wrap.className = 'modal confirm-box';
+      wrap.setAttribute('role', 'alertdialog');
+      wrap.setAttribute('aria-modal', 'true');
+      wrap.innerHTML = `
+        <div class="modal__card">
+          <div class="confirm-box__icon" aria-hidden="true">${icon}</div>
+          <h2>${escHtml(title)}</h2>
+          <p>${escHtml(message).replace(/\n/g, '<br>')}</p>
+          <div class="confirm-box__actions">
+            ${cancelLabel ? `<button type="button" class="btn btn--ghost" data-c="0">${escHtml(cancelLabel)}</button>` : ''}
+            <button type="button" class="btn${danger ? ' btn--danger' : ''}" data-c="1">${escHtml(okLabel)}</button>
+          </div>
+        </div>`;
+      const done = (ok) => {
+        document.removeEventListener('keydown', onKey, true);
+        wrap.remove();
+        prevFocus?.focus?.();
+        resolve(ok);
+      };
+      const onKey = (e) => { if (e.key === 'Escape') { e.stopPropagation(); done(false); } };
+      wrap.addEventListener('click', (e) => {
+        if (e.target === wrap) return done(false);           // bấm ra ngoài = Hủy
+        const b = e.target.closest('[data-c]');
+        if (b) done(b.dataset.c === '1');
+      });
+      document.addEventListener('keydown', onKey, true);
+      document.body.appendChild(wrap);
+      wrap.querySelector(cancelLabel ? '[data-c="0"]' : '[data-c="1"]').focus();
+    });
+  }
 
   /* ---------- Lưu trữ an toàn (trình duyệt chặn bộ nhớ vẫn chạy được) ---------- */
   const store = {
@@ -71,6 +111,7 @@
     teacherPin: () => store.get(PIN_KEY, sessionStorage),
     setTeacherPin: (pin) => store.set(PIN_KEY, pin, sessionStorage),
     clearTeacherPin: () => store.del(PIN_KEY, sessionStorage),
+    confirm: confirmBox,
     onPersist: null,     // db.js gọi mỗi khi tiến độ thay đổi
     classRank: null,     // { rank, size, cls } – thứ hạng trong lớp (huy hiệu "Nhà vô địch tuần")
     logout
@@ -130,23 +171,29 @@
     el.textContent = status === 'ok' ? '☁️ Đã lưu' : '⚠️ Chưa lưu';
   }
 
-  function sessionExpired() {
+  async function sessionExpired() {
     store.del(SESSION_KEY);
-    alert('Phiên đăng nhập đã hết hạn hoặc tài khoản đã bị giáo viên xóa. Vui lòng đăng nhập lại.');
+    store.del(Session.storageKey);
+    store.del(pendingKey());
+    await confirmBox('Phiên đăng nhập đã hết hạn hoặc tài khoản đã bị giáo viên xóa. Vui lòng đăng nhập lại.',
+      { title: 'Cần đăng nhập lại', okLabel: 'Đăng nhập', cancelLabel: '', icon: '🔑' });
+    location.hash = '';
     location.reload();
   }
 
   async function logout() {
     if (Session.role === 'student') {
-      if (!confirm('Đăng xuất khỏi ChemRescue?')) return;
+      if (!(await confirmBox('Đăng xuất khỏi ChemRescue? Tiến độ đã được lưu trên máy chủ.', { title: 'Đăng xuất', okLabel: 'Đăng xuất', icon: '🚪' }))) return;
       await push();
       if (store.get(pendingKey())) {
-        if (!confirm('Một phần tiến độ chưa gửi được lên máy chủ (mất mạng). Vẫn đăng xuất và bỏ phần đó?')) return;
+        if (!(await confirmBox('Một phần tiến độ chưa gửi được lên máy chủ (mất mạng). Vẫn đăng xuất và bỏ phần đó?',
+          { title: 'Chưa lưu xong', okLabel: 'Vẫn đăng xuất', danger: true, icon: '⚠️' }))) return;
       }
       // Xóa bản lưu trên máy này (máy dùng chung) – tiến độ vẫn còn trên máy chủ
       store.del(Session.storageKey);
       store.del(pendingKey());
     } else {
+      if (!(await confirmBox('Đăng xuất khỏi chế độ giáo viên?', { title: 'Đăng xuất', okLabel: 'Đăng xuất', icon: '🚪' }))) return;
       Session.clearTeacherPin();
     }
     store.del(SESSION_KEY);
