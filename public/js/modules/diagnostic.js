@@ -84,7 +84,11 @@
     },
     clear() { localStorage.removeItem(SESSION_KEY); },
     create() {
-      const qs = shuffle(DB.select('questions'));
+      // Mỗi lần làm: rút ngẫu nhiên 3 câu cho mỗi chủ đề từ ngân hàng → đề luôn khác nhau
+      const PER_TOPIC = 3;
+      const byTopic = {};
+      DB.select('questions').forEach((q) => { (byTopic[q.topic_id] ||= []).push(q); });
+      const qs = shuffle(Object.values(byTopic).flatMap((list) => shuffle(list).slice(0, PER_TOPIC)));
       return {
         started_at: Date.now(),
         elapsed_ms: 0,

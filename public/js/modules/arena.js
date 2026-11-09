@@ -338,15 +338,30 @@
     return list[Math.floor(Math.random() * list.length)];
   }
 
+  const RECENT_KEEP = ROUNDS * 3;   // không lặp câu đã gặp trong 3 trận gần nhất
+  const MAX_PER_TOPIC = 2;           // mỗi trận tối đa 2 câu cùng chủ đề → trải đều ≥ 3 chủ đề
+
   function buildRounds() {
-    // Ưu tiên câu thuộc chủ đề yếu (từ lần chẩn đoán gần nhất), phần còn lại ngẫu nhiên
-    const qs = DB.select('questions');
+    // Ưu tiên câu thuộc chủ đề yếu (từ lần chẩn đoán gần nhất), tránh câu vừa gặp, trải đều chủ đề
+    const all = DB.select('questions');
+    const recent = new Set(DB.meta().arena_recent || []);
+    const fresh = all.filter((q) => !recent.has(q.id));
+    const pool = fresh.length >= ROUNDS * 2 ? fresh : all;   // ngân hàng quá nhỏ → cho phép lặp
     const last = DB.select('quiz_attempts', { user_id: uid() }, { orderBy: 'id desc', limit: 1 })[0];
-    const weight = (q) => (last ? 100 - (last.topic_scores[q.topic_id] ?? 50) : 50) + Math.random() * 60;
-    return qs.map((q) => ({ q, w: weight(q) }))
-      .sort((a, b) => b.w - a.w)
-      .slice(0, ROUNDS)
-      .map(({ q }) => ({ q, opts: shuffle(q.options.map((_, i) => i)) }));
+    const weight = (q) => (last ? 100 - (last.topic_scores[q.topic_id] ?? 50) : 50) + Math.random() * 80;
+
+    const picked = [];
+    const perTopic = {};
+    for (const { q } of pool.map((q) => ({ q, w: weight(q) })).sort((a, b) => b.w - a.w)) {
+      if ((perTopic[q.topic_id] || 0) >= MAX_PER_TOPIC) continue;
+      perTopic[q.topic_id] = (perTopic[q.topic_id] || 0) + 1;
+      picked.push(q);
+      if (picked.length === ROUNDS) break;
+    }
+
+    // Ghi nhớ các câu vừa dùng (giữ RECENT_KEEP câu gần nhất)
+    DB.meta({ arena_recent: [...picked.map((q) => q.id), ...(DB.meta().arena_recent || [])].slice(0, RECENT_KEEP) });
+    return shuffle(picked).map((q) => ({ q, opts: shuffle(q.options.map((_, i) => i)) }));
   }
 
   function renderMatch() {
