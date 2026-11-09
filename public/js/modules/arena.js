@@ -18,6 +18,7 @@
   /* ---------- HẰNG SỐ ---------- */
   const ROUNDS = 5;
   const ROUND_MS = 15000;
+  const CALC_MS = 40000;   // chỉ để hiển thị: câu tính toán trong db.js có time_ms: 40000
   const REVEAL_MS = 2300;
   const START_HP = 100;
   const QUEST_WIN = 4;
@@ -193,7 +194,7 @@
             <span class="ar-ava ar-ava--bot">❓</span>
           </div>
           <h3>Đấu trường 1vs1</h3>
-          <p class="dx-muted">${ROUNDS} vòng, mỗi câu ${ROUND_MS / 1000} giây. Trả lời <b>đúng và nhanh</b> để gây nhiều sát thương hơn đối thủ ẩn danh.</p>
+          <p class="dx-muted">${ROUNDS} vòng, mỗi câu ${ROUND_MS / 1000} giây (câu tính toán ${CALC_MS / 1000} giây). Trả lời <b>đúng và nhanh</b> để gây nhiều sát thương hơn đối thủ ẩn danh.</p>
           <ul class="ar-record">
             <li class="is-win"><b>${rec.win}</b><span>Thắng</span></li>
             <li class="is-lose"><b>${rec.lose}</b><span>Thua</span></li>
@@ -474,14 +475,16 @@
     if (M.round >= ROUNDS || M.hp.me <= 0 || M.hp.bot <= 0) { endMatch(); return; }
 
     const R = M.rounds[M.round];
-    M.cur = { ...R, start: performance.now(), me: null, bot: null };
+    // Thời gian mỗi câu: câu tính toán có time_ms riêng (vd 40 giây), câu khác 15 giây
+    const limit = R.q.time_ms || ROUND_MS;
+    M.cur = { ...R, limit, start: performance.now(), me: null, bot: null };
     M.phase = 'round';
     $('#arRound').textContent = M.round + 1;
     setStatus('me', ''); setStatus('bot', '');
 
     $('#arCenter').innerHTML = `
       <div class="ar-q">
-        <div class="ar-timer" id="arTimer" style="--t:100"><b id="arSec">15</b></div>
+        <div class="ar-timer" id="arTimer" style="--t:100"><b id="arSec">${Math.round(limit / 1000)}</b></div>
         <p class="ar-q__meta">Câu ${M.round + 1} · ${esc(DB.get('topics', R.q.topic_id)?.short || '')}</p>
         <h2 class="ar-q__text">${esc(R.q.text)}</h2>
         <div class="ar-opts">
@@ -496,17 +499,18 @@
 
     // Lịch trả lời của đối thủ
     const [lo, hi] = M.bot.speed_ms;
-    const botAt = Math.min(ROUND_MS - 400, rand(lo, hi));
+    const scale = limit / ROUND_MS; // câu dài hơn → đối thủ cũng "suy nghĩ" lâu hơn tương ứng
+    const botAt = Math.min(limit - 400, rand(lo * scale, hi * scale));
     const botRight = Math.random() < M.bot.skill;
     later(() => botAnswer(botRight), botAt);
 
-    // Đồng hồ 15 giây chạy bằng requestAnimationFrame (chính xác, mượt)
+    // Đồng hồ đếm ngược chạy bằng requestAnimationFrame (chính xác, mượt)
     const timerEl = $('#arTimer'), secEl = $('#arSec');
-    let lastSec = 15;
+    let lastSec = Math.round(limit / 1000);
     const frame = (now) => {
       if (!M || M.phase !== 'round') return;
-      const left = Math.max(0, ROUND_MS - (now - M.cur.start));
-      timerEl.style.setProperty('--t', (left / ROUND_MS) * 100);
+      const left = Math.max(0, limit - (now - M.cur.start));
+      timerEl.style.setProperty('--t', (left / limit) * 100);
       const sec = Math.ceil(left / 1000);
       if (sec !== lastSec) {
         lastSec = sec;
@@ -520,8 +524,9 @@
     M.raf = requestAnimationFrame(frame);
   }
 
-  const timeLeftMs = () => Math.max(0, ROUND_MS - (performance.now() - M.cur.start));
-  const damageFor = (leftMs) => 10 + Math.ceil(leftMs / 1000);   // 10 … 25
+  const timeLeftMs = () => Math.max(0, M.cur.limit - (performance.now() - M.cur.start));
+  // Sát thương 10 … 25 theo TỈ LỆ thời gian còn lại (câu 15 giây hay 40 giây đều công bằng)
+  const damageFor = (leftMs) => 10 + Math.ceil((leftMs / M.cur.limit) * 15);
 
   function setStatus(who, html) {
     const el = $(who === 'me' ? '#arMeStatus' : '#arBotStatus');
@@ -546,7 +551,7 @@
     if (!M || M.phase !== 'round' || M.cur.me) return;
     const left = timeLeftMs();
     const correct = orig === M.cur.q.answer;
-    M.cur.me = { orig, correct, ms: Math.round(ROUND_MS - left) };
+    M.cur.me = { orig, correct, ms: Math.round(M.cur.limit - left) };
 
     view.querySelectorAll('.ar-opt').forEach((b) => { b.disabled = true; });
     const btn = view.querySelector(`.ar-opt[data-orig="${orig}"]`);
@@ -568,7 +573,7 @@
     const left = timeLeftMs();
     const wrongs = M.cur.q.options.map((_, i) => i).filter((i) => i !== M.cur.q.answer);
     const orig = right ? M.cur.q.answer : wrongs[Math.floor(Math.random() * wrongs.length)];
-    M.cur.bot = { orig, correct: right, ms: Math.round(ROUND_MS - left) };
+    M.cur.bot = { orig, correct: right, ms: Math.round(M.cur.limit - left) };
 
     setStatus('bot', '<span class="ar-st">⚡ Đã chốt đáp án!</span>');
     if (right) hit('me', damageFor(left));
@@ -578,10 +583,10 @@
   function timeUp() {
     if (!M || M.phase !== 'round') return;
     if (!M.cur.me) {
-      M.cur.me = { orig: null, correct: false, ms: ROUND_MS };
+      M.cur.me = { orig: null, correct: false, ms: M.cur.limit };
       setStatus('me', '<span class="ar-st ar-st--bad">⏰ Hết giờ</span>');
     }
-    if (!M.cur.bot) M.cur.bot = { orig: null, correct: false, ms: ROUND_MS };
+    if (!M.cur.bot) M.cur.bot = { orig: null, correct: false, ms: M.cur.limit };
     reveal();
   }
 
@@ -606,7 +611,7 @@
     $('#arCenter .ar-wait')?.remove();
     $('#arCenter .ar-q').insertAdjacentHTML('beforeend', `<p class="ar-explain">💡 ${esc(q.explain)}</p>`);
 
-    M.log.push({ qid: q.id, me: me || { orig: null, correct: false, ms: ROUND_MS }, bot });
+    M.log.push({ qid: q.id, me: me || { orig: null, correct: false, ms: M.cur.limit }, bot });
     later(nextRound, REVEAL_MS);
   }
 

@@ -45,7 +45,8 @@ const ChemDB = (() => {
         { id: 'solution', name: 'Acid – Base – Muối',           short: 'Acid–Base', icon: '💧', branch: 'solution' }
       ],
 
-      /* ===== Ngân hàng câu hỏi: 50 câu (10 câu / chủ đề) – dùng cho Phân hệ 1 (Chẩn đoán) và Phân hệ 3 (Đấu trường) ===== */
+      /* ===== Ngân hàng câu hỏi: 70 câu – dùng cho Phân hệ 1 (Chẩn đoán) và Phân hệ 3 (Đấu trường) =====
+         Mỗi chủ đề 10 câu; riêng "Phản ứng hóa học & mol" thêm 20 câu vận dụng tính toán (id 51–70). */
       questions: [
         { id: 1, topic_id: 'atom', text: 'Hạt nào mang điện tích dương trong hạt nhân nguyên tử?',
           options: ['Electron', 'Proton', 'Neutron', 'Ion'], answer: 1,
@@ -207,7 +208,81 @@ const ChemDB = (() => {
           explain: 'CaO là oxide của kim loại, tác dụng với acid tạo muối và nước → oxide base.' },
         { id: 50, topic_id: 'solution', text: 'Tên gọi theo IUPAC của muối NaCl là:',
           options: ['Sodium chloride', 'Sodium chlorine', 'Natri clorua', 'Sodium chlorate'], answer: 0,
-          explain: 'Tên muối = tên kim loại + tên gốc acid: sodium + chloride → sodium chloride.' }
+          explain: 'Tên muối = tên kim loại + tên gốc acid: sodium + chloride → sodium chloride.' },
+
+        /* ----- Vận dụng thấp: tính toán theo công thức (id 51–70), chủ đề "Phản ứng hóa học & mol".
+                 time_ms: 40000 → ở Đấu trường câu này được 40 giây thay vì 15 giây.
+                 Công thức (KHTN 8): n = m / M · V(khí, đkc 25 °C, 1 bar) = n × 24,79 · C_M = n / V(L)
+                                     C% = m_ct / m_dd × 100% · d(A/B) = M_A / M_B · d(A/kk) = M_A / 29 ----- */
+        // — Số mol & khối lượng
+        { id: 51, topic_id: 'redox', time_ms: 40000, text: 'Số mol của 5,6 g iron (Fe) là (Fe = 56):',
+          options: ['0,1 mol', '0,2 mol', '1 mol', '0,56 mol'], answer: 0,
+          explain: 'n = m / M = 5,6 / 56 = 0,1 mol.' },
+        { id: 52, topic_id: 'redox', time_ms: 40000, text: 'Số mol của 9,8 g sulfuric acid (H₂SO₄) là (H = 1, S = 32, O = 16):',
+          options: ['0,2 mol', '0,1 mol', '1 mol', '0,98 mol'], answer: 1,
+          explain: 'M(H₂SO₄) = 2 × 1 + 32 + 4 × 16 = 98 g/mol → n = 9,8 / 98 = 0,1 mol.' },
+        { id: 53, topic_id: 'redox', time_ms: 40000, text: 'Khối lượng của 0,25 mol calcium carbonate (CaCO₃) là (Ca = 40, C = 12, O = 16):',
+          options: ['10 g', '40 g', '25 g', '100 g'], answer: 2,
+          explain: 'M(CaCO₃) = 40 + 12 + 3 × 16 = 100 g/mol → m = n × M = 0,25 × 100 = 25 g.' },
+        { id: 54, topic_id: 'redox', time_ms: 40000, text: 'Khối lượng của 0,5 mol sodium hydroxide (NaOH) là (Na = 23, O = 16, H = 1):',
+          options: ['40 g', '80 g', '10 g', '20 g'], answer: 3,
+          explain: 'M(NaOH) = 23 + 16 + 1 = 40 g/mol → m = 0,5 × 40 = 20 g.' },
+
+        // — Thể tích khí ở điều kiện chuẩn (25 °C, 1 bar): 24,79 L/mol
+        { id: 55, topic_id: 'redox', time_ms: 40000, text: 'Thể tích của 0,2 mol khí oxygen (O₂) ở điều kiện chuẩn (25 °C, 1 bar) là:',
+          options: ['4,958 L', '4,48 L', '24,79 L', '49,58 L'], answer: 0,
+          explain: 'V = n × 24,79 = 0,2 × 24,79 = 4,958 L. (4,48 L là cách tính cũ theo 22,4 L/mol.)' },
+        { id: 56, topic_id: 'redox', time_ms: 40000, text: 'Số mol của 12,395 L khí carbon dioxide (CO₂) ở điều kiện chuẩn là:',
+          options: ['0,25 mol', '0,5 mol', '1 mol', '2 mol'], answer: 1,
+          explain: 'n = V / 24,79 = 12,395 / 24,79 = 0,5 mol.' },
+        { id: 57, topic_id: 'redox', time_ms: 40000, text: 'Thể tích của 3,2 g khí oxygen (O₂) ở điều kiện chuẩn là (O = 16):',
+          options: ['2,24 L', '4,958 L', '2,479 L', '24,79 L'], answer: 2,
+          explain: 'n = 3,2 / 32 = 0,1 mol → V = 0,1 × 24,79 = 2,479 L.' },
+        { id: 58, topic_id: 'redox', time_ms: 40000, text: 'Ở điều kiện chuẩn, 7,437 L khí hydrogen (H₂) có khối lượng là (H = 1):',
+          options: ['0,3 g', '6 g', '0,15 g', '0,6 g'], answer: 3,
+          explain: 'n = 7,437 / 24,79 = 0,3 mol → m = 0,3 × 2 = 0,6 g.' },
+
+        // — Nồng độ mol: C_M = n / V (V tính bằng lít)
+        { id: 59, topic_id: 'redox', time_ms: 40000, text: 'Hòa tan 0,2 mol NaCl vào nước được 500 mL dung dịch. Nồng độ mol của dung dịch là:',
+          options: ['0,1 M', '0,4 M', '1 M', '0,04 M'], answer: 1,
+          explain: 'Đổi 500 mL = 0,5 L → C_M = n / V = 0,2 / 0,5 = 0,4 M (mol/L).' },
+        { id: 60, topic_id: 'redox', time_ms: 40000, text: 'Hòa tan 8 g NaOH vào nước được 200 mL dung dịch. Nồng độ mol của dung dịch là (Na = 23, O = 16, H = 1):',
+          options: ['1 M', '0,4 M', '2 M', '0,04 M'], answer: 0,
+          explain: 'n = 8 / 40 = 0,2 mol; V = 0,2 L → C_M = 0,2 / 0,2 = 1 M.' },
+        { id: 61, topic_id: 'redox', time_ms: 40000, text: 'Số mol HCl có trong 250 mL dung dịch hydrochloric acid 2 M là:',
+          options: ['0,25 mol', '8 mol', '0,5 mol', '5 mol'], answer: 2,
+          explain: 'n = C_M × V = 2 × 0,25 = 0,5 mol.' },
+        { id: 62, topic_id: 'redox', time_ms: 40000, text: 'Thể tích dung dịch CuSO₄ 0,5 M có chứa 0,1 mol CuSO₄ là:',
+          options: ['50 mL', '500 mL', '20 mL', '200 mL'], answer: 3,
+          explain: 'V = n / C_M = 0,1 / 0,5 = 0,2 L = 200 mL.' },
+
+        // — Nồng độ phần trăm: C% = m_chất tan / m_dung dịch × 100%
+        { id: 63, topic_id: 'redox', time_ms: 40000, text: 'Hòa tan 20 g muối ăn vào 80 g nước. Nồng độ phần trăm của dung dịch là:',
+          options: ['25%', '20%', '80%', '16%'], answer: 1,
+          explain: 'm_dd = 20 + 80 = 100 g → C% = 20 / 100 × 100% = 20%. (Lưu ý: chia cho khối lượng DUNG DỊCH, không chia cho nước.)' },
+        { id: 64, topic_id: 'redox', time_ms: 40000, text: 'Khối lượng NaCl có trong 200 g dung dịch NaCl 10% là:',
+          options: ['20 g', '10 g', '2 g', '200 g'], answer: 0,
+          explain: 'm_ct = C% × m_dd / 100% = 10 × 200 / 100 = 20 g.' },
+        { id: 65, topic_id: 'redox', time_ms: 40000, text: 'Hòa tan 15 g đường vào 135 g nước. Nồng độ phần trăm của dung dịch đường là:',
+          options: ['11,1%', '15%', '10%', '90%'], answer: 2,
+          explain: 'm_dd = 15 + 135 = 150 g → C% = 15 / 150 × 100% = 10%.' },
+        { id: 66, topic_id: 'redox', time_ms: 40000, text: 'Cần bao nhiêu gam nước để hòa tan 10 g KCl, thu được dung dịch KCl 20%?',
+          options: ['50 g', '30 g', '200 g', '40 g'], answer: 3,
+          explain: 'm_dd = 10 × 100 / 20 = 50 g → m_nước = 50 − 10 = 40 g.' },
+
+        // — Tỉ khối chất khí: d(A/B) = M_A / M_B; d(A/kk) = M_A / 29
+        { id: 67, topic_id: 'redox', time_ms: 40000, text: 'Tỉ khối của khí carbon dioxide (CO₂) so với khí hydrogen (H₂) là (C = 12, O = 16, H = 1):',
+          options: ['22', '44', '11', '2'], answer: 0,
+          explain: 'd = M(CO₂) / M(H₂) = 44 / 2 = 22 → CO₂ nặng gấp 22 lần H₂.' },
+        { id: 68, topic_id: 'redox', time_ms: 40000, text: 'Tỉ khối của khí sulfur dioxide (SO₂) so với không khí là (S = 32, O = 16, M không khí ≈ 29):',
+          options: ['0,45', '2,21', '64', '1,21'], answer: 1,
+          explain: 'M(SO₂) = 32 + 2 × 16 = 64 → d = 64 / 29 ≈ 2,21 → SO₂ nặng hơn không khí khoảng 2,21 lần.' },
+        { id: 69, topic_id: 'redox', time_ms: 40000, text: 'Khí X có tỉ khối so với khí hydrogen (H₂) bằng 16. Khối lượng mol của khí X là:',
+          options: ['16 g/mol', '8 g/mol', '32 g/mol', '64 g/mol'], answer: 2,
+          explain: 'M_X = d × M(H₂) = 16 × 2 = 32 g/mol (có thể là khí oxygen O₂).' },
+        { id: 70, topic_id: 'redox', time_ms: 40000, text: 'Khí nào sau đây NHẸ hơn không khí (M không khí ≈ 29)?',
+          options: ['CO₂ (M = 44)', 'Cl₂ (M = 71)', 'O₂ (M = 32)', 'NH₃ (M = 17)'], answer: 3,
+          explain: 'd(NH₃/kk) = 17 / 29 ≈ 0,59 < 1 → ammonia nhẹ hơn không khí. Các khí còn lại có M > 29.' }
       ],
 
       /* ===== Phân hệ 2: Flashcard (16 thẻ) ===== */
