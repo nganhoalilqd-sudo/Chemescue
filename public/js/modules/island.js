@@ -105,6 +105,7 @@
   const on = (el, evt, fn, opt) => { el.addEventListener(evt, fn, opt); cleanup.push(() => el.removeEventListener(evt, fn, opt)); };
 
   function teardown() {
+    window.ChemSpeech?.stop();
     if (FC) awardFlashcards();
     cleanup.forEach((fn) => fn());
     cleanup = [];
@@ -285,7 +286,10 @@
           <span class="isl-fc__count" id="fcCount"></span>
           <div class="progress"><div class="progress__fill" id="fcProg" style="width:0"></div></div>
           ${cram ? '<span class="tag">Luyện tự do · không đổi lịch</span>' : `<span class="isl-fc__mix" id="fcMix"></span>`}
+          ${Speech ? `<button class="isl-autoread" data-isl="autoread" aria-pressed="${Speech.auto}" title="Tự đọc to câu hỏi khi hiện thẻ và đáp án khi lật thẻ">${autoLabel()}</button>` : ''}
         </div>
+        ${Speech && !Speech.hasVietnamese() ? `<p class="isl-voice-note" id="fcVoiceNote">🔈 Máy này chưa có giọng đọc tiếng Việt nên phần tiếng Việt có thể đọc chưa chuẩn.
+          Cách thêm: Windows → Cài đặt › Thời gian &amp; ngôn ngữ › Giọng nói › thêm <b>Tiếng Việt</b>; điện thoại Android → cài <b>Google Speech Services</b>; iPhone có sẵn giọng <b>Linh</b>.</p>` : ''}
 
         <div class="isl-scene" id="fcScene"></div>
         <div class="isl-rate" id="fcRate" aria-live="polite"></div>
@@ -325,6 +329,38 @@
       const fresh = rest.filter((id) => !reviewOf(id)).length;
       mix.innerHTML = `<span title="Thẻ mới">🆕 ${fresh}</span><span title="Thẻ ôn">🔁 ${rest.length - fresh}</span>`;
     }
+  }
+
+  /* ---------- KÊNH NGHE: đọc to thẻ (js/speech.js) ---------- */
+  const Speech = window.ChemSpeech?.supported ? window.ChemSpeech : null;
+  const autoLabel = () => (Speech?.auto ? '🔊 Tự đọc: Bật' : '🔈 Tự đọc: Tắt');
+
+  // Câu cần đọc của mặt đang hiện: ưu tiên câu soạn sẵn (say_front / say_back)
+  function speechText(card, back) {
+    if (back) return card.say_back || `Đáp án: ${card.back}`;
+    return card.say_front || card.front;
+  }
+
+  function setSpeakBtn(on) {
+    const b = $('#fcRate [data-isl="speak"]');
+    if (!b) return;
+    b.classList.toggle('is-speaking', on);
+    b.innerHTML = on ? '⏹ Dừng đọc' : (FC?.flipped ? '🔊 Nghe đáp án' : '🔊 Nghe câu hỏi');
+    b.setAttribute('aria-pressed', String(on));
+  }
+
+  function speakCurrent() {
+    if (!Speech || !FC || FC.idx >= FC.queue.length) return;
+    if (Speech.speaking) { Speech.stop(); return; }   // bấm lần nữa = dừng
+    const card = FC.cards.get(FC.queue[FC.idx]);
+    setSpeakBtn(true);
+    Speech.speak(speechText(card, FC.flipped), { onend: () => setSpeakBtn(false) });
+  }
+
+  function autoSpeak() {
+    if (!Speech?.auto || !FC || FC.idx >= FC.queue.length) return;
+    Speech.stop();
+    speakCurrent();
   }
 
   function cardHTML(card) {
@@ -374,7 +410,9 @@
     scene.appendChild(el);
 
     updateFcBar();
+    Speech?.stop();
     renderRate();
+    autoSpeak();
   }
 
   function flip() {
@@ -386,15 +424,20 @@
     el.setAttribute('aria-pressed', String(FC.flipped));
     const card = FC.cards.get(FC.queue[FC.idx]);
     el.setAttribute('aria-label', FC.flipped ? `Đáp án: ${card.back}` : `Thẻ: ${card.front}. Nhấn để lật xem đáp án.`);
+    Speech?.stop();
     renderRate();
+    if (FC.flipped) autoSpeak();
   }
 
   function renderRate() {
     const box = $('#fcRate');
     if (!FC.flipped) {
       box.innerHTML = `
-        <button class="btn isl-flipbtn" data-isl="flip" data-mod="m2">↻ Lật thẻ</button>
-        <p class="isl-keys dx-only-kbd"><kbd>Space</kbd> lật thẻ · <kbd>1</kbd>–<kbd>4</kbd> chấm mức nhớ</p>`;
+        <div class="isl-rate__row">
+          <button class="btn isl-flipbtn" data-isl="flip" data-mod="m2">↻ Lật thẻ</button>
+          ${Speech ? '<button class="btn btn--ghost isl-speak" data-isl="speak" aria-pressed="false">🔊 Nghe câu hỏi</button>' : ''}
+        </div>
+        <p class="isl-keys dx-only-kbd"><kbd>Space</kbd> lật thẻ · <kbd>1</kbd>–<kbd>4</kbd> chấm mức nhớ${Speech ? ' · <kbd>N</kbd> nghe' : ''}</p>`;
       return;
     }
     const prev = FC.cram ? null : reviewOf(FC.queue[FC.idx]);
@@ -403,7 +446,8 @@
       return `<button class="isl-grade isl-grade--${g.id}" data-grade="${g.id}">
                 <b>${g.label}</b>${preview ? `<small>${preview}</small>` : ''}<kbd>${g.key}</kbd>
               </button>`;
-    }).join('')}</div>`;
+    }).join('')}</div>
+    ${Speech ? '<button class="btn btn--ghost isl-speak" data-isl="speak" aria-pressed="false">🔊 Nghe đáp án</button>' : ''}`;
   }
 
   function rate(grade) {
@@ -490,8 +534,21 @@
   }
 
   function onFlashClick(e) {
+    // Nhả nút sau khi bấm → phím Space vẫn dùng để lật thẻ (không bấm lại nút)
+    const speakBtn = e.target.closest('[data-isl="speak"]');
+    if (speakBtn) { speakBtn.blur(); speakCurrent(); return; }
+    const auto = e.target.closest('[data-isl="autoread"]');
+    if (auto) {
+      auto.blur();
+      Speech.auto = !Speech.auto;
+      auto.textContent = autoLabel();
+      auto.setAttribute('aria-pressed', String(Speech.auto));
+      toast(Speech.auto ? 'Đã bật tự đọc: thẻ sẽ được đọc to khi hiện và khi lật' : 'Đã tắt tự đọc', Speech.auto ? '🔊' : '🔈');
+      if (Speech.auto) autoSpeak(); else Speech.stop();
+      return;
+    }
     const grade = e.target.closest('[data-grade]');
-    if (grade) { rate(grade.dataset.grade); return; }
+    if (grade) { Speech?.stop(); rate(grade.dataset.grade); return; }
     if (e.target.closest('.isl-card:not(.is-leaving)') || e.target.closest('[data-isl="flip"]')) { flip(); return; }
     if (e.target.closest('[data-isl="cram"]')) {
       const topic = FC.topic;
@@ -505,8 +562,9 @@
     if (e.target.matches('input, textarea, select')) return;
     const onButton = e.target.closest('button, a');
     if ((e.key === ' ' || e.key === 'Enter') && !onButton && FC.idx < FC.queue.length) { e.preventDefault(); flip(); return; }
+    if (Speech && (e.key === 'n' || e.key === 'N') && FC.idx < FC.queue.length) { e.preventDefault(); speakCurrent(); return; }
     const g = GRADES.find((x) => x.key === e.key);
-    if (g && FC.flipped) { e.preventDefault(); rate(g.id); }
+    if (g && FC.flipped) { e.preventDefault(); Speech?.stop(); rate(g.id); }
   }
 
   /* =========================================================

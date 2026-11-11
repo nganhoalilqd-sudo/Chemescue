@@ -483,3 +483,17 @@
   .isl-card__inner { transition: none; }
   .lab-reactor.is-success, .lab-reactor.is-warn { animation: none; }
 }
+
+/* ---------- KÊNH NGHE: nút đọc to & tự đọc ---------- */
+.isl-rate__row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.isl-speak { min-width: 170px; }
+.isl-speak.is-speaking { color: var(--m2-dark); border-color: var(--m2); background: #fff4e8; animation: isl-pulse 1.2s ease-in-out infinite; }
+@keyframes isl-pulse { 50% { box-shadow: 0 0 0 6px rgba(255, 138, 31, .18); } }
+.isl-autoread {
+  margin-left: auto; padding: 6px 12px; font: inherit; font-size: 13px; font-weight: 700; white-space: nowrap;
+  color: var(--muted); background: var(--surface-2); border: 2px solid var(--line); border-radius: 999px; cursor: pointer;
+}
+.isl-autoread[aria-pressed="true"] { color: var(--m2-dark); background: #fff4e8; border-color: var(--m2); }
+.isl-voice-note { margin: -8px 0 16px; padding: 10px 14px; font-size: 13px; color: #8a5a00; background: var(--warn-bg); border-radius: 12px; }
+@media (prefers-reduced-motion: reduce) { .isl-speak.is-speaking { animation: none; } }
+@media (max-width: 767px) { .isl-autoread { margin-left: 0; } .isl-speak { min-width: 0; } }

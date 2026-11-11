@@ -15,6 +15,7 @@
   const PIN_KEY = 'chemrescue.teacherPin';
   const SCRIPTS = [
     'js/db.js',
+    'js/speech.js',      // kênh nghe: đọc to flashcard
     'js/app.js',
     'js/modules/diagnostic.js',
     'js/modules/island.js',
