@@ -2,9 +2,10 @@
    ChemRescue — Đọc to (kênh nghe) cho học sinh học tốt bằng thính giác
    ---------------------------------------------------------
    • Dùng giọng đọc có sẵn của trình duyệt (Web Speech API) – miễn phí, không cần mạng riêng.
-   • Văn bản tiếng Việt đọc bằng giọng vi-VN; phần đặt trong [[ ]] (tên IUPAC, thuật ngữ
-     tiếng Anh) đọc bằng giọng tiếng Anh cho đúng phát âm. Ví dụ:
-       'Ion [[sulfate]] mang điện tích hai trừ.'
+   • Đọc bằng MỘT giọng tiếng Việt duy nhất, mỗi lần đọc là một câu liền mạch (không ngắt quãng).
+   • Tên IUPAC / thuật ngữ tiếng Anh được đọc theo PHIÊN ÂM VIỆT (bảng PHONETIC bên dưới),
+     chữ hiển thị trên thẻ vẫn giữ nguyên tên IUPAC. Ví dụ: 'Ion [[sulfate]]…' → "Ion sun phát…".
+     Muốn sửa cách đọc một từ: sửa/thêm vào bảng PHONETIC.
    • Văn bản không có câu đọc soạn sẵn → tự chuyển kí hiệu hóa học sang lời đọc
      (H₂O → "H 2 O", → → "tạo thành", ≈ → "xấp xỉ"…).
    ========================================================= */
@@ -37,7 +38,28 @@ const ChemSpeech = (() => {
     return list.find((v) => /natural|online|google/i.test(v.name)) || list[0] || null;
   }
   const viVoice = () => pickVoice('vi');
-  const enVoice = () => pickVoice('en-us') || pickVoice('en-gb') || pickVoice('en');
+
+  /* ---------- Phiên âm Việt cho tên IUPAC & thuật ngữ (chỉ dùng khi ĐỌC) ---------- */
+  const PHONETIC = {
+    // Hạt & đơn vị
+    'proton': 'prô tôn', 'neutron': 'nơ trôn', 'electron': 'e léc trôn', 'a m u': 'a mờ u', 'amu': 'a mờ u',
+    'avogadro': 'a vô ga đrô',
+    // Nguyên tố
+    'hydrogen': 'hi đrô', 'helium': 'hê li', 'lithium': 'li ti', 'carbon': 'các bon', 'nitrogen': 'ni tơ',
+    'oxygen': 'ô xi', 'fluorine': 'flo', 'neon': 'nê ông', 'sodium': 'xô đi um', 'magnesium': 'ma giê',
+    'aluminium': 'a lu mi ni um', 'silicon': 'si lic', 'phosphorus': 'phốt pho', 'sulfur': 'lưu huỳnh',
+    'chlorine': 'clo', 'argon': 'ác gon', 'potassium': 'pô ta xi um', 'calcium': 'can xi',
+    'iron': 'ai ơn', 'copper': 'cóp pơ', 'zinc': 'kẽm', 'silver': 'xin vơ', 'barium': 'ba ri',
+    // Gốc, ion, hợp chất
+    'chloride': 'clo rai', 'sulfate': 'sun phát', 'nitrate': 'ni trát', 'carbonate': 'các bô nát',
+    'phosphate': 'phốt phát', 'oxide': 'ô xít', 'hydroxide': 'hi đrô xít', 'ammonium': 'a mô ni um',
+    'acid': 'a xít', 'base': 'ba zơ',
+    'hydrochloric acid': 'hi đrô clo ríc a xít', 'sulfuric acid': 'sun phu ríc a xít', 'nitric acid': 'ni tríc a xít'
+  };
+  // Từ dài trước (vd "sodium hydroxide" khớp "sodium" rồi "hydroxide"; "hydrochloric acid" trước "acid")
+  const PHONETIC_RE = new RegExp(
+    `(?<![\\p{L}])(${Object.keys(PHONETIC).sort((a, b) => b.length - a.length).map((k) => k.replace(/ /g, '\\s+')).join('|')})(?![\\p{L}])`, 'giu');
+  const phonetic = (text) => text.replace(PHONETIC_RE, (m) => PHONETIC[m.toLowerCase().replace(/\s+/g, ' ')] || m);
 
   /* ---------- Chuyển kí hiệu sang lời đọc tiếng Việt ---------- */
   const SUB = { '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4', '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9' };
@@ -55,19 +77,18 @@ const ChemSpeech = (() => {
     s = s.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]+/g, (m) => ` mũ ${[...m].map((c) => SUP[c]).join('')}`);
     // Chỉ số dưới: H₂O → "H 2 O"
     s = s.replace(/[₀-₉]+/g, (m) => ` ${[...m].map((c) => SUB[c]).join('')} `);
+    // Số La Mã: Iron(III) → "ba"; hóa trị II → "hai"; nhóm IIA → "hai A"
+    const ROMAN = { I: 'một', II: 'hai', III: 'ba', IV: 'bốn', V: 'năm', VI: 'sáu', VII: 'bảy', VIII: 'tám' };
+    s = s.replace(/\((VIII|VII|VI|IV|V|III|II|I)\)/g, (_, r) => ` ${ROMAN[r]} `);
+    s = s.replace(/(hóa trị|Hóa trị)\s+(VIII|VII|VI|IV|V|III|II|I)\b/g, (_, w, r) => `${w} ${ROMAN[r]}`);
+    s = s.replace(/(nhóm|Nhóm)\s+(VIII|VII|VI|IV|V|III|II|I)(A|B)\b/g, (_, w, r, ab) => `${w} ${ROMAN[r]} ${ab}`);
     SYMBOLS.forEach(([re, rep]) => { s = s.replace(re, rep); });
     return s.replace(/\s+/g, ' ').trim();
   }
 
-  // Tách đoạn tiếng Việt / tiếng Anh theo dấu [[ ]]
-  function segments(text) {
-    const out = [];
-    String(text).split(/(\[\[[^\]]+\]\])/).forEach((part) => {
-      if (!/[\p{L}\p{N}]/u.test(part)) return;   // bỏ đoạn chỉ có dấu câu (tránh ngắt quãng thừa)
-      const en = part.startsWith('[[');
-      out.push({ en, text: en ? part.slice(2, -2) : toSpeakable(part) });
-    });
-    return out;
+  // Chuẩn bị câu đọc: bỏ dấu [[ ]] → phiên âm Việt → chuyển kí hiệu sang lời
+  function prepare(text) {
+    return toSpeakable(phonetic(String(text).replace(/\[\[([^\]]+)\]\]/g, '$1')));
   }
 
   /* ---------- Đọc ---------- */
@@ -88,29 +109,25 @@ const ChemSpeech = (() => {
     finish(id);
   }
 
-  // Đọc một đoạn văn bản; trả về Promise kết thúc khi đọc xong (hoặc bị dừng)
+  // Đọc một đoạn văn bản bằng MỘT giọng tiếng Việt; trả về Promise kết thúc khi đọc xong (hoặc bị dừng)
   function speak(text, { onend } = {}) {
     if (!supported || !text) return Promise.resolve();
     stop();
-    const parts = segments(text);
-    const vi = viVoice(), en = enVoice();
     const id = Date.now() + Math.random();
     current = id;
     onDone = onend || null;
     return new Promise((resolve) => {
-      parts.forEach((p, i) => {
-        const u = new SpeechSynthesisUtterance(p.text);
-        const voice = p.en ? en : vi;
-        u.lang = p.en ? (en?.lang || 'en-US') : 'vi-VN';
-        if (voice) u.voice = voice;
-        u.rate = settings.rate;
-        if (i === parts.length - 1) u.onend = u.onerror = () => { finish(id); resolve(); };
-        try { synth.speak(u); }
-        catch (err) {                       // trình duyệt từ chối đọc → không để nút bị kẹt
-          console.warn('[ChemSpeech] Không đọc được:', err);
-          finish(id); resolve();
-        }
-      });
+      const u = new SpeechSynthesisUtterance(prepare(text));
+      const vi = viVoice();
+      u.lang = 'vi-VN';
+      if (vi) u.voice = vi;
+      u.rate = settings.rate;
+      u.onend = u.onerror = () => { finish(id); resolve(); };
+      try { synth.speak(u); }
+      catch (err) {                       // trình duyệt từ chối đọc → không để nút bị kẹt
+        console.warn('[ChemSpeech] Không đọc được:', err);
+        finish(id); resolve();
+      }
     });
   }
 
@@ -121,6 +138,7 @@ const ChemSpeech = (() => {
     speak,
     stop,
     toSpeakable,
+    prepare,
     get auto() { return settings.auto; },
     set auto(v) { settings.auto = Boolean(v); saveSettings(); }
   };

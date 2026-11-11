@@ -537,7 +537,8 @@ const ChemDB = (() => {
 
       /* ===== Phân hệ 2: Flashcard (16 thẻ) =====
          say_front / say_back: câu ĐỌC TO khi bấm 🔊 Nghe (viết bằng lời, không dùng kí hiệu).
-         Phần trong [[ ]] (tên IUPAC, thuật ngữ tiếng Anh) được đọc bằng giọng tiếng Anh.
+         Phần trong [[ ]] là tên IUPAC / thuật ngữ: đọc theo phiên âm Việt (bảng PHONETIC trong js/speech.js),
+         toàn bộ câu đọc bằng một giọng tiếng Việt, liền mạch.
          Thẻ không có say_* → tự đọc từ front/back (kí hiệu được chuyển sang lời đọc). */
       flashcards: [
         { id: 1,  topic_id: 'atom',     visual: 'p⁺ n⁰ e⁻',    front: 'Nguyên tử được cấu tạo từ những hạt nào?',            back: 'Proton (+) và neutron (không mang điện) ở hạt nhân; electron (−) chuyển động ở lớp vỏ.',
@@ -545,7 +546,7 @@ const ChemDB = (() => {
           say_back: "Nguyên tử gồm hạt nhân và lớp vỏ. Hạt nhân có [[proton]] mang điện dương và [[neutron]] không mang điện. Lớp vỏ có các [[electron]] mang điện âm, chuyển động quanh hạt nhân." },
         { id: 2,  topic_id: 'atom',     visual: '1 amu',       front: 'Đơn vị khối lượng nguyên tử là gì?',                  back: 'amu (atomic mass unit). Khối lượng 1 proton ≈ khối lượng 1 neutron ≈ 1 amu.',
           say_front: "Đơn vị khối lượng nguyên tử là gì?",
-          say_back: "Là [[A M U]], viết tắt của [[atomic mass unit]]. Khối lượng một [[proton]] xấp xỉ khối lượng một [[neutron]], và xấp xỉ một [[A M U]]." },
+          say_back: "Đơn vị khối lượng nguyên tử là [[amu]]. Khối lượng một [[proton]] xấp xỉ khối lượng một [[neutron]], và xấp xỉ một [[amu]]." },
         { id: 3,  topic_id: 'atom',     visual: '2 · 8 · 8',   front: 'Lớp electron thứ nhất và thứ hai chứa tối đa bao nhiêu electron?', back: 'Lớp thứ nhất tối đa 2 electron; lớp thứ hai tối đa 8 electron.',
           say_front: "Lớp [[electron]] thứ nhất và thứ hai chứa tối đa bao nhiêu [[electron]]?",
           say_back: "Lớp thứ nhất chứa tối đa hai [[electron]]. Lớp thứ hai chứa tối đa tám [[electron]]." },
